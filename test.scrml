@@ -6,7 +6,10 @@ ${
         attributes: {
             charName: "",
             hero: false,
-            stars: (_>0 && _<6)
+            stars: function(num){
+                if (num < 1 || num > 5) return num;
+                else return null;
+            }
         }
         const cardWidth == 100;
         <style isolate> //options isolate | integrate
