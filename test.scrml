@@ -1,0 +1,39 @@
+<html>
+<body bgcolor="#060606">
+
+${
+    component character_card = {
+        attributes: {
+            charName: "",
+            hero: false,
+            stars: (_>0 && _<6)
+        }
+        const cardWidth == 100;
+        <style isolate> //options isolate | integrate
+            .card {
+                height: 200px;
+                width: ${cardWidth}px;
+            }
+        <div id=${attributes.charName}>
+        if (attributes.hero)<hero_el>
+        for (let i = 0 ; i < attributes.stars ; i++){
+            <span class="stars">
+                <img src="imgs/star.jpg">
+            </span>
+        }
+    }
+}
+
+<div id="joey">for (i=0; i < 10 ; i++){
+    <p>line # ${i}</p>
+}
+</div>
+
+</body>
+</html>
+
+
+
+
+
+(END)
