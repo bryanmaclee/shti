@@ -1,39 +1,46 @@
 <html>
-<body style="background-color:'#060606'">
+    <body style="background-color:'#060606'">this is innerText
 
-${
-    component character_card = {
-        attributes: {
-            charName: "",
-            hero: false,
-            stars: function(num){
-                if (num < 1 || num > 5) return num;
-                else return null;
+    ${
+        component character_card = {
+            cardWidth: 100;
+            attributes: {
+                charName: "",
+                hero: false,
+                stars: function(num){
+                    if (num < 1 || num > 5) return num;
+                    else return null;
+                }
             }
-        }
-        styles: isolate
-            .card {
-                height: 200px;
-                width: ${cardWidth}px;
-            }
-        </style>
-        <div id=${attributes.charName}>
-        const cardWidth = 100;
-        if (attributes.hero)<hero_el>
-        for (let i = 0 ; i < attributes.stars ; i++){
-            <span class="stars">
-                <img src="imgs/star.jpg">
-            </span>
+            style: {
+                isolate: true,
+                height: `200px`,
+                width: `${cardWidth}px`,
+                @h1:
+                    color: `red`
+            } 
+            template: 
+                <div id=${attributes.charName}>
+                    <h1>attributes.charName</h1>
+                    if (attributes.hero)<hero_el>
+                    for (let i = 0 ; i < attributes.stars ; i++){
+                        <span class="stars">
+                            <img src="imgs/star.jpg">
+                        </span>
+                    }
+                </div>
         }
     }
-}
 
-<div id="joey">for (i=0; i < 10 ; i++){
-    <p>line # ${i}</p>
-}
-</div>
+    <div id="joey">
+        ${
+            for (i=0; i < 10 ; i++){
+                <p>line # ${i}</p>
+            }
+        }
+    </div>
 
-</body>
+    </body>
 </html>
 
 

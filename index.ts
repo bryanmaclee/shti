@@ -17,9 +17,13 @@ const Files = {
     ? datastr.substring(0, datastr.indexOf("(END)"))
     : datastr;
   const lexed = lex(data);
-  await Bun.write(Files.outputFile, JSON.stringify(lexed, null, 2));
-  const code = assembleOutput(lexed);
-  await Bun.write("out/code.html", code);
+  if (lexed) {
+    await Bun.write(Files.outputFile, JSON.stringify(lexed, null, 2));
+    const code = assembleOutput(lexed);
+    await Bun.write("out/code.html", code);
+  } else {
+    console.log("DID NOT COMPLETE");
+  }
   console.log("Tokens written to output file.");
 })();
 
@@ -40,7 +44,7 @@ function assembleOutput(tokens: any[]) {
       scope--;
       if (scope === 0) {
         outCode += "</script> ";
-      }else{
+      } else {
         outCode += token.value + " ";
       }
     } else {
@@ -50,29 +54,7 @@ function assembleOutput(tokens: any[]) {
   return outCode;
 }
 
-function findSht(data: string) {
-  let context = "markup";
-  let cursor = 0;
-  let lookAhead = 1;
-  while (cursor < data.length) {
-    if (data[cursor] === "$") {
-      if (data[lookAhead] === "{") {
-        context = "script";
-        let scopeLevel = 0;
-        while (data[lookAhead] !== "}" && scopeLevel > 0) {
-          if (data[lookAhead] === "{") {
-            scopeLevel++;
-          }
-        }
-      }
-      if (data[lookAhead]) lookAhead++;
-    }
-    cursor++;
-    lookAhead = cursor + 1;
-  }
-}
-
-export function lex(input: string) {
+function lex(input: string) {
   const tokens = [];
   let position = 0;
   let line = 1;
@@ -85,6 +67,7 @@ export function lex(input: string) {
 
   while (position < input.length) {
     let matchFound = false;
+    let newLine = true;
     const chunk = input.slice(position);
     for (let i = 0; i < tokenTypes.length; i++) {
       const { test, type } = tokenTypes[i]!;
@@ -93,32 +76,36 @@ export function lex(input: string) {
         matchFound = true;
         const value = match[0];
         if (chunk.indexOf(match[0]) === 0) {
-          if (type === "document_object" || type === "document_object_closer") {
-            const tagName = getTagName(value);
-            if (tagName !== null) {
-              console.log(elTypeAr.indexOf(tagName));
-            }
-            console.log(value, tagName);
-          }
+          // if (type === "document_object" || type === "document_object_closer") {
+          //   const tagName = getTagName(value);
+          //   if (tagName !== null) {
+          //     console.log(elTypeAr.indexOf(tagName));
+          //   }
+          //   console.log(value, tagName);
+          // }
           if (type != "whitespace") {
             tokens.push({ type, value, line, col });
           }
           if (type === "new_line") {
             line++;
             col = 0;
+            newLine = true;
           }
           position += value.length;
           col += value.length;
+          newLine = false;
           break;
         }
-      }
+      } 
+      // else {
+      //   console.log(
+      //     `Unexpected token at position ${position}, line: ${line}, col: ${col} :: ${input[position]}`
+      //   );
+      //   break;
+      //   // return null;
+      // }
     }
-    // console.log(position, input.length, input[position])
-    if (!matchFound) {
-      throw new SyntaxError(
-        `Unexpected token at position ${position}: ${input[position]}`
-      );
-    }
+    // console.log(position, input.length, input[position]);
   }
   return tokens;
 }
