@@ -16,8 +16,10 @@ const Files = {
   const data = datastr.includes("(END)")
     ? datastr.substring(0, datastr.indexOf("(END)"))
     : datastr;
-    const lexed = lex(data)
+  const lexed = lex(data);
   await Bun.write(Files.outputFile, JSON.stringify(lexed, null, 2));
+  const code = assembleOutput(lexed);
+  await Bun.write("out/code.html", code);
   console.log("Tokens written to output file.");
 })();
 
@@ -26,6 +28,27 @@ const shti = {
     name = name;
   },
 };
+
+function assembleOutput(tokens: any[]) {
+  let outCode = "";
+  let scope = 0;
+  tokens.forEach((token) => {
+    if (token.type === "script_opener") {
+      outCode += "<script> ";
+      scope++;
+    } else if (token.type === "close_curly") {
+      scope--;
+      if (scope === 0) {
+        outCode += "</script> ";
+      }else{
+        outCode += token.value + " ";
+      }
+    } else {
+      outCode += token.value + " ";
+    }
+  });
+  return outCode;
+}
 
 function findSht(data: string) {
   let context = "markup";
@@ -42,8 +65,7 @@ function findSht(data: string) {
           }
         }
       }
-      if (data[lookAhead] )
-      lookAhead++;
+      if (data[lookAhead]) lookAhead++;
     }
     cursor++;
     lookAhead = cursor + 1;
@@ -71,14 +93,14 @@ export function lex(input: string) {
         matchFound = true;
         const value = match[0];
         if (chunk.indexOf(match[0]) === 0) {
-          // if (type === "document_object" || type === "document_object_closer") {
-          //   const tagName = getTagName(value);
-          //   if (tagName !== null) {
-          //     console.log(elTypeAr.indexOf(tagName))
-          //   }
-          //   console.log(value, tagName);
-          // }
-          if (type != "whitespace" && type != "new_line") {
+          if (type === "document_object" || type === "document_object_closer") {
+            const tagName = getTagName(value);
+            if (tagName !== null) {
+              console.log(elTypeAr.indexOf(tagName));
+            }
+            console.log(value, tagName);
+          }
+          if (type != "whitespace") {
             tokens.push({ type, value, line, col });
           }
           if (type === "new_line") {
