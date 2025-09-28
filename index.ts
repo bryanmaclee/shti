@@ -1,7 +1,21 @@
 import { tokenTypes, elementTypes, elTypeAr } from "./syntax.js";
 
+type Token = {
+  type: string;
+  value: string;
+  stripped: string;
+  start: {
+    line: number;
+    col: number;
+  };
+  end: {
+    line: number;
+    col: number;
+  };
+
+};
 const Files = {
-  inTest: "./test.scrml",
+  inTest: "./tests/fullTest.scrml",
   outputFile: "out/output.json",
   outputText: "out/output.txt",
   astFile: "out/ast.json",
@@ -10,22 +24,69 @@ const Files = {
   tokens: "out/tokens.json",
 };
 
+const args = process.argv.slice(2);
+let testFile = "";
+if (args[0]) {
+  testFile = args[0];
+} else {
+  testFile = Files.inTest;
+}
+
+console.log(testFile);
+
 (async function () {
-  console.log("doin some sht");
-  const datastr = await Bun.file(Files.inTest).text();
-  const data = datastr.includes("(END)")
-    ? datastr.substring(0, datastr.indexOf("(END)"))
+  // console.log("doin some sht");
+  const datastr = await Bun.file(testFile).text();
+  const dataStart = datastr.includes("((BEGIN))")
+    ? datastr.substring(datastr.indexOf("((BEGIN))") + 9)
     : datastr;
+  const data = dataStart.includes("((END))")
+    ? dataStart.substring(0, dataStart.indexOf("((END))"))
+    : dataStart;
   const lexed = lex(data);
   if (lexed) {
-    await Bun.write(Files.outputFile, JSON.stringify(lexed, null, 2));
+    await Bun.write(Files.tokens, JSON.stringify(lexed, null, 2));
     const code = assembleOutput(lexed);
     await Bun.write("out/code.html", code);
+    const ast = generateAst(lexed);
+    await Bun.write(Files.astFile, JSON.stringify(ast, null, 2));
   } else {
     console.log("DID NOT COMPLETE");
   }
   console.log("Tokens written to output file.");
 })();
+
+function generateAst(tokens: Token[], opener: string = "", ast: any = []) {
+  let openerScope = 0;
+  let indentLevel = 0;
+  let context = "script";
+  for (let i = 0; i < tokens.length; i++) {
+    const token: Token = tokens[i]!;
+    const sb: any = {};
+    if (opener === token.stripped && token.type === "document_object")
+      openerScope++;
+    if (opener === token.stripped && token.type === "document_object_closer")
+      openerScope--;
+    switch (token.type) {
+      case "document_object":
+        sb.token = token;
+        sb.children = generateAst(tokens.slice(i + 1), token.stripped);
+        break;
+      case "document_object_closer":
+        sb.token = token;
+        sb.children = [];
+        if (openerScope < 0) return ast;
+        break;
+      default:
+        sb.token = token;
+        sb.children = [];
+        break;
+    }
+    ast.push(sb);
+    i += sb.children.length;
+  }
+  return ast;
+}
 
 const shti = {
   component: function (name: string, attributes: {}) {
@@ -34,7 +95,7 @@ const shti = {
 };
 
 function assembleOutput(tokens: any[]) {
-  console.log("got here bitches!");
+  // console.log("got here bitches!");
   let outCode = "";
   let scope = 0;
   let context = "";
@@ -54,7 +115,7 @@ function assembleOutput(tokens: any[]) {
         }
         break;
       case "open_curly":
-        outCode += "{ "
+        outCode += "{ ";
         scope++;
         break;
       case "keyword":
@@ -87,6 +148,14 @@ function assembleOutput(tokens: any[]) {
 function lex(input: string) {
   const tokens = [];
   let position = 0;
+  const start = {
+    line: 1,
+    col: 1,
+  };
+  const end = {
+    line: 1,
+    col: 1,
+  };
   let line = 1;
   let col = 1;
   let limiter = 0;
@@ -101,28 +170,36 @@ function lex(input: string) {
     let matchFound = false;
     let newLine = true;
     const chunk = input.slice(position);
+    const globMl = new RegExp(/\r\n|\r|\n/g);
     for (let i = 0; i < tokenTypes.length; i++) {
       const { test, type } = tokenTypes[i]!;
       const match = test.exec(chunk);
+      let stripped: null | string = null;
       if (match) {
         matchFound = true;
         const value = match[0];
         if (chunk.indexOf(match[0]) === 0) {
-          // if (type === "document_object" || type === "document_object_closer") {
-          //   const tagName = getTagName(value);
-          //   if (tagName !== null) {
-          //     console.log(elTypeAr.indexOf(tagName));
-          //   }
-          //   console.log(value, tagName);
-          // }
+          if (type === "document_object" || type === "document_object_closer") {
+            const tagName = getTagName(value);
+            if (tagName !== null) {
+              // console.log(elTypeAr.indexOf(tagName));
+              stripped = tagName;
+            }
+            // console.log(value, tagName);
+          }
+          if (!stripped) stripped = value;
+          const multiLine = [...value.matchAll(globMl)]
+          console.log(multiLine, "over")
+          const tempLineNum = line+multiLine.length;
           if (type != "whitespace") {
-            tokens.push({ type, value, line, col });
+            tokens.push({ type, value, stripped, start: { line, col }, end: { line: tempLineNum, col}});
           }
           if (type === "new_line") {
-            line++;
+            // line++;
             col = 0;
             newLine = true;
           }
+          line+= multiLine.length;
           position += value.length;
           col += value.length;
           newLine = false;

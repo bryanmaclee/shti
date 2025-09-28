@@ -1,0 +1,13 @@
+((BEGIN))
+<div
+  at="t"
+  att="th"
+  attr="thi"
+>
+  thing
+</div>
+((END))
+
+<div>
+  this
+</div>

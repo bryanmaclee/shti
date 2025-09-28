@@ -1,0 +1,57 @@
+((BEGIN))
+<html>
+    <body style="background-color:'#060606'">"this is innerText"
+
+    {
+        component character_card = {
+            cardWidth: 100,
+            attributes: {
+                charName: "",
+                hero: false,
+                stars: function(num){
+                    if (num < 1 || num > 5) return num;
+                    else return null;
+                },
+                hitPoints: 100,
+            },
+            style: {
+                isolate: true,
+                height: `200px`,
+                width: `${cardWidth}px`,
+                h1: {
+                    color: "red",
+                },
+                #{attributes.charName}{
+                  color: "blue",
+                }
+            }, 
+            template: 
+              <div id={attributes.charName}>
+                <div>
+                  <h1>attributes.charName</h1>
+                  <span class="stars">
+                    for (let i = 0 ; i < attributes.stars ; i++){
+                      <img src="imgs/star.jpg">
+                    }
+                  </span>
+                </div>
+                <div>{inner}</div>
+              </div>
+        }
+    }
+
+    <div id="joey">
+        {
+            for (i=0; i < 10 ; i++){
+                <p>`line # ${i}`</p>
+            }
+        }
+    </div>
+
+    <character_card charName="hyper dude" hero stars=4>
+      "Hyper Man confuses his enemys with rapid fire non-sequiters"
+    </character_card>
+
+    </body>
+</html>
+((END))

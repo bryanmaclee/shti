@@ -1,6 +1,6 @@
 
 export const tokenTypes = [
-  { type: "script_opener", value: "${", test: /\${/ },
+  // { type: "script_opener", value: "${", test: /\${/ },
   { type: "new_line", value: true, test: /\r\n|\r|\n/ },
   { type: "document_object", test: /<[^/\s+0-9!][^>]*>/ },
   { type: "document_object_closer", test: /<\/[^/\s+0-9!][^>]*>/ },
@@ -15,7 +15,7 @@ export const tokenTypes = [
   { type: "number", value: null, test: /[0-9]+(\.[0-9]+)?/ },
   { type: "string", value: null, test: /"(?:\\.|[^"])*"/ },
   { type: "string", value: null, test: /'(?:\\.|[^'])*'/ },
-  { type: "template_string", value: null, test: /`(?:\\.|[^'])*`/ },
+  { type: "template_string", value: null, test: /`(?:\\.|[^`])*`/ },
   { type: "comment", value: null, test: /\/\/.*$/m },
   { type: "whitespace", value: null, test: /\s+/ },
   { type: "open_paren", value: "(", test: /\(/ },
