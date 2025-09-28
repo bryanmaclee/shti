@@ -34,21 +34,51 @@ const shti = {
 };
 
 function assembleOutput(tokens: any[]) {
+  console.log("got here bitches!");
   let outCode = "";
   let scope = 0;
+  let context = "";
+  const indent = "  ";
   tokens.forEach((token) => {
-    if (token.type === "script_opener") {
-      outCode += "<script> ";
-      scope++;
-    } else if (token.type === "close_curly") {
-      scope--;
-      if (scope === 0) {
-        outCode += "</script> ";
-      } else {
+    switch (token.type) {
+      case "script_opener":
+        outCode += "<script> ";
+        scope++;
+        break;
+      case "close_curly":
+        scope--;
+        if (scope === 0) {
+          outCode += "</script> ";
+        } else {
+          outCode += token.value + " ";
+        }
+        break;
+      case "open_curly":
+        outCode += "{ "
+        scope++;
+        break;
+      case "keyword":
+        switch (token.value) {
+          case "component":
+            outCode += "const ";
+            context = "component";
+            break;
+        }
+        break;
+      case "equals":
         outCode += token.value + " ";
-      }
-    } else {
-      outCode += token.value + " ";
+        if ((context = "component")) {
+        }
+        break;
+      case "new_line":
+        let indentation = "";
+        for (let i = 0; i < scope; i++) {
+          indentation += indent;
+        }
+        outCode += token.value + indentation;
+        break;
+      default:
+        outCode += token.value + " ";
     }
   });
   return outCode;
@@ -59,6 +89,8 @@ function lex(input: string) {
   let position = 0;
   let line = 1;
   let col = 1;
+  let limiter = 0;
+  let repeater = 0;
 
   function getTagName(tag: string) {
     const match = tag.match(/^<\s*\/?\s*([a-zA-Z][\w-]*)/);
@@ -96,7 +128,7 @@ function lex(input: string) {
           newLine = false;
           break;
         }
-      } 
+      }
       // else {
       //   console.log(
       //     `Unexpected token at position ${position}, line: ${line}, col: ${col} :: ${input[position]}`
@@ -105,7 +137,16 @@ function lex(input: string) {
       //   // return null;
       // }
     }
-    // console.log(position, input.length, input[position]);
+    if (repeater === position) {
+      limiter++;
+      if (limiter >= 50) {
+        console.log(position, input.length, input[position]);
+        break;
+      }
+    } else {
+      limiter = 0;
+    }
+    repeater = position;
   }
   return tokens;
 }

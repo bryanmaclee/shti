@@ -40,6 +40,7 @@ export const tokenTypes = [
   { type: "or", value: "||", test: /\|\|/ },
   { type: "not", value: "!", test: /!/ },
   { type: "question", value: "?", test: /\?/ },
+  { type: "at", value: "@", test: /@/ },
   { type: "less_than", value: "<", test: /</ },
   { type: "greater_than", value: ">", test: />/ },
   { type: "less_than_or_equal", value: "<=", test: /<=/ },
