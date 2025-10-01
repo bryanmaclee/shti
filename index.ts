@@ -1,5 +1,6 @@
 import { tokenTypes, elementTypes, elTypeAr } from "./dep/syntax.js";
 import { lex } from "./dep/lexer.js";
+import { assembleOutput } from "./dep/assemble.js";
 
 type Token = {
   type: string;
@@ -74,16 +75,19 @@ function generateAst(tokens: Token[], opener: string = "", ast: any = []) {
       openerScope--;
     switch (token.type) {
       case "document_object":
-        sb.token = token;
+        // sb.token = token;
+        sb.value = token.value;
         sb.children = generateAst(tokens.slice(i + 1), token.stripped);
         break;
       case "document_object_closer":
-        sb.token = token;
+        // sb.token = token;
+        sb.value = token.value;
         sb.children = [];
         if (openerScope < 0) return ast;
         break;
       default:
-        sb.token = token;
+        // sb.token = token;
+        sb.value = token.value;
         sb.children = [];
         break;
     }
@@ -98,56 +102,3 @@ const shti = {
     name = name;
   },
 };
-
-function assembleOutput(tokens: any[]) {
-  // console.log("got here bitches!");
-  let outCode = "";
-  let scope = 0;
-  let context = "";
-  const indent = "  ";
-  tokens.forEach((token) => {
-    switch (token.type) {
-      case "script_opener":
-        outCode += "<script> ";
-        scope++;
-        break;
-      case "close_curly":
-        scope--;
-        if (scope === 0) {
-          outCode += "</script> ";
-        } else {
-          outCode += token.value + " ";
-        }
-        break;
-      case "open_curly":
-        outCode += "{ ";
-        scope++;
-        break;
-      case "keyword":
-        switch (token.value) {
-          case "component":
-            outCode += "const ";
-            context = "component";
-            break;
-        }
-        break;
-      case "equals":
-        outCode += token.value + " ";
-        if ((context = "component")) {
-        }
-        break;
-      case "new_line":
-        let indentation = "";
-        for (let i = 0; i < scope; i++) {
-          indentation += indent;
-        }
-        outCode += token.value + indentation;
-        break;
-      default:
-        outCode += token.value + " ";
-    }
-  });
-  return outCode;
-}
-
-
