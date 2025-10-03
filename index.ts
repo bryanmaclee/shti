@@ -54,7 +54,8 @@ console.log(testFile);
     await Bun.write(Files.tokens, JSON.stringify(lexed, null, 2));
     const code = assembleOutput(lexed);
     await Bun.write("out/code.html", code);
-    const ast = generateAst(lexed);
+    const { ast, iter } = generateAst(lexed);
+    // console.log(ast)
     await Bun.write(Files.astFile, JSON.stringify(ast, null, 2));
   } else {
     console.log("DID NOT COMPLETE");
@@ -62,8 +63,10 @@ console.log(testFile);
   console.log("Tokens written to output file.");
 })();
 
-function generateAst(tokens: Token[], opener: string = "", ast: any = []) {
+function generateAst(tokens: Token[], opener: string = "") {
+  const ast: any = [];
   let openerScope = 0;
+  let idde = 0;
   let indentLevel = 0;
   let context = "script";
   for (let i = 0; i < tokens.length; i++) {
@@ -71,13 +74,22 @@ function generateAst(tokens: Token[], opener: string = "", ast: any = []) {
     const sb: any = {};
     if (opener === token.stripped && token.type === "document_object")
       openerScope++;
-    if (opener === token.stripped && token.type === "document_object_closer")
+    if (opener === token.stripped && token.type === "document_object_closer") {
       openerScope--;
+      if (openerScope === -1) {
+        return { ast, i };
+      }
+    }
     switch (token.type) {
       case "document_object":
         // sb.token = token;
         sb.value = token.value;
-        sb.children = generateAst(tokens.slice(i + 1), token.stripped);
+        const { ast: jo, i: itter } = generateAst(
+          tokens.slice(i + 1),
+          token.stripped
+        );
+        console.log(jo)
+        sb.children = jo;
         break;
       case "document_object_closer":
         // sb.token = token;
@@ -93,10 +105,14 @@ function generateAst(tokens: Token[], opener: string = "", ast: any = []) {
     }
     ast.push(sb);
     i += sb.children.length;
+    idde = i;
   }
-  return ast;
+  return {ast, idde};
 }
 
+function countNewLines(data: string) {
+  console.log(data);
+}
 const shti = {
   component: function (name: string, attributes: {}) {
     name = name;
